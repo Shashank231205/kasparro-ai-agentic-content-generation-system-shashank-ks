@@ -1,0 +1,9 @@
+{
+    "product_name": {{ product_name }},
+    "faq_items": {{ faq_items }},
+    "benefits": {{ benefits }},
+    "ingredients": {{ ingredients }},
+    "usage": {{ usage }},
+    "safety": {{ safety }},
+    "pricing": {{ pricing }}
+}
