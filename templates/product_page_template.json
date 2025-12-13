@@ -1,9 +1,11 @@
 {
-  "fields": [
-    "benefits",
-    "ingredients",
-    "usage",
-    "safety",
-    "pricing"
-  ]
+  "product_name": "{{ product_name }}",
+  "benefits": {{ benefits | tojson }},
+  "ingredients": {{ ingredients | tojson }},
+  "usage": "{{ usage }}",
+  "safety": {
+    "side_effects": "{{ safety.side_effects }}",
+    "skin_type": {{ safety.skin_type | tojson }}
+  },
+  "pricing": "{{ pricing }}"
 }

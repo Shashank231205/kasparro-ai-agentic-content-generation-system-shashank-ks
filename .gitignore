@@ -1,35 +1,45 @@
-# Python cache
+# ----------------------------
+# Python
+# ----------------------------
 __pycache__/
 *.pyc
-
-# Virtual environment
-venv/
-.env
-
-# Model files (VERY LARGE — do NOT push to GitHub)
-*.bin
-*.pt
-*.safetensors
-
-# HuggingFace cache
-~/.cache/huggingface/
-cache/
-hf_cache/
-
-# Transformer downloaded models
-models/
-bart-base/
-flan-t5-base/
-
-# Logs and outputs
-outputs/*.json
-logs/
+*.pyo
+*.pyd
 *.log
 
-# IDE files
+# ----------------------------
+# Virtual environments
+# ----------------------------
+venv/
+
+# ----------------------------
+# Pytest
+# ----------------------------
+.pytest_cache/
+
+# ----------------------------
+# IDEs
+# ----------------------------
 .vscode/
 .idea/
 
-# OS junk
+# ----------------------------
+# OS
+# ----------------------------
 .DS_Store
 Thumbs.db
+
+# ----------------------------
+# HuggingFace / Model Cache
+# ----------------------------
+hf_models/
+.cache/
+
+# ----------------------------
+# Generated outputs (keep JSONs)
+# ----------------------------
+logs/
+
+# NOTE:
+# outputs/*.json is intentionally tracked
+# because outputs are part of assignment verification

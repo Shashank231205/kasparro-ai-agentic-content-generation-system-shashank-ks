@@ -1,43 +1,34 @@
-import json
-from template_engine.engine import TemplateEngine
+# agents/product_page_agent.py
 
-class ProductPageAgent:
-    def __init__(self):
-        pass
+from typing import Dict, Any
+from agents.base_agent import BaseAgent, AgentError
+from template_engine.jinja_engine import JinjaEngine
 
-    def run(self, product, template_path):
-        template = TemplateEngine(template_path).template
 
-        product_name = product.get("product_name", "Unknown Product")
+class ProductPageAgent(BaseAgent):
+    """
+    Renders a clean product page JSON using Jinja.
+    """
 
-        output = {"product_name": product_name}
+    def __init__(self, llm=None):
+        super().__init__(llm)
+        self.engine = JinjaEngine()
 
-        for field in template["fields"]:
-
-            if field == "benefits":
-                output["benefits"] = {
-                    "product_name": product_name,
-                    "benefits": product.get("benefits", [])
-                }
-
-            elif field == "ingredients":
-                output["ingredients"] = {
-                    "key_ingredients": product.get("key_ingredients", []),
-                    "concentration": product.get("concentration", "")
-                }
-
-            elif field == "usage":
-                output["usage"] = {
-                    "how_to_use": product.get("how_to_use", "")
-                }
-
-            elif field == "safety":
-                output["safety"] = {
+    def run(self, product: Dict[str, Any], template_path: str) -> str:
+        try:
+            context = {
+                "product_name": product.get("product_name", ""),
+                "benefits": product.get("benefits", []),
+                "ingredients": product.get("key_ingredients", []),
+                "usage": product.get("how_to_use", ""),
+                "safety": {
                     "skin_type": product.get("skin_type", []),
                     "side_effects": product.get("side_effects", "")
-                }
+                },
+                "pricing": product.get("price", "")
+            }
 
-            elif field == "pricing":
-                output["pricing"] = product.get("price", "")
+            return self.engine.render_template_file(template_path, context)
 
-        return output
+        except Exception as e:
+            raise AgentError(f"ProductPageAgent error: {e}")

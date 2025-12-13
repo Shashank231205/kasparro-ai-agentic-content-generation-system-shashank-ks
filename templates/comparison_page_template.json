@@ -1,5 +1,20 @@
 {
-    "product_a": {{ product_a }},
-    "product_b": {{ product_b }},
-    "comparison": {{ comparison }}
+  "product_a": {
+    "name": "{{ product_a.name }}",
+    "price": "{{ product_a.price }}",
+    "ingredients": {{ product_a.ingredients | tojson }},
+    "benefits": {{ product_a.benefits | tojson }}
+  },
+  "product_b": {
+    "name": "{{ product_b.name }}",
+    "price": "{{ product_b.price }}",
+    "ingredients": {{ product_b.ingredients | tojson }},
+    "benefits": {{ product_b.benefits | tojson }}
+  },
+  "comparison": {
+    "price_difference": "{{ comparison.price_difference }}",
+    "shared_ingredients": {{ comparison.shared_ingredients | tojson }},
+    "key_differences": {{ comparison.key_differences | tojson }},
+    "overall_summary": "{{ comparison.overall_summary }}"
+  }
 }

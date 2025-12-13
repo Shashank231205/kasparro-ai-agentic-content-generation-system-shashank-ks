@@ -1,19 +1,11 @@
-from orchestrator.dag_orchestrator import DAGOrchestrator
-
+# main.py
+from orchestrator.crew_orchestrator import HybridOrchestrator
 
 def main():
-    print("\n🚀 Starting Multi-Agent Content Generation Pipeline...\n")
+    orch = HybridOrchestrator(debug=True)
+    final = orch.run()
 
-    orchestrator = DAGOrchestrator()
-    outputs = orchestrator.run()
-
-    print("\n✅ Pipeline completed successfully!")
-    print("📄 Generated files:")
-    print(" - outputs/faq.json")
-    print(" - outputs/product_page.json")
-    print(" - outputs/comparison_page.json")
-    print("\nDone.\n")
-
+    print("\nFINAL OUTPUT KEYS:", final.keys())
 
 if __name__ == "__main__":
     main()

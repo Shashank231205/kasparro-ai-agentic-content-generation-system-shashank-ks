@@ -1,0 +1,20 @@
+{
+  "product_a": {
+    "name": "GlowBoost Vitamin C Serum",
+    "price": "₹699",
+    "ingredients": ["Vitamin C", "Hyaluronic Acid"],
+    "benefits": ["Brightening", "Fades dark spots"]
+  },
+  "product_b": {
+    "name": "GlowBoost Vitamin C Serum",
+    "price": "₹699",
+    "ingredients": ["Vitamin C", "Hyaluronic Acid"],
+    "benefits": ["Brightening", "Fades dark spots"]
+  },
+  "comparison": {
+    "price_difference": "Same price",
+    "shared_ingredients": ["Vitamin C", "Hyaluronic Acid"],
+    "key_differences": [],
+    "overall_summary": "GlowBoost Vitamin C Serum and GlowBoost Vitamin C Serum are comparable products with overlapping ingredients and benefits. The final choice depends on pricing preferences and formulation differences."
+  }
+}

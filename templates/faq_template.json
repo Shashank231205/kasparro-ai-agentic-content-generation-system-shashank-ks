@@ -1,9 +1,11 @@
 {
-    "product_name": {{ product_name }},
-    "faq_items": {{ faq_items }},
-    "benefits": {{ benefits }},
-    "ingredients": {{ ingredients }},
-    "usage": {{ usage }},
-    "safety": {{ safety }},
-    "pricing": {{ pricing }}
+  "product_name": "{{ product_name }}",
+  "faq_items": [
+    {% for item in faq_items %}
+    {
+      "category": "{{ item.category }}",
+      "question": "{{ item.question }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
 }

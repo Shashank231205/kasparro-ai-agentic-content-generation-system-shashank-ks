@@ -1,16 +1,14 @@
-import os
+# agents/template_selection_agent.py
+from agents.base_agent import BaseAgent
+from infrastructure.config import Config
 
-class TemplateSelectionAgent:
-    """
-    Selects which JSON template files the content generator should use.
-    """
 
-    def __init__(self):
-        self.template_dir = "templates"
+class TemplateSelectionAgent(BaseAgent):
+    """Returns template paths from config."""
 
     def run(self):
         return {
-            "faq": os.path.join(self.template_dir, "faq_template.json"),
-            "product_page": os.path.join(self.template_dir, "product_page_template.json"),
-            "comparison_page": os.path.join(self.template_dir, "comparison_template.json")
+            "faq": Config.TEMPLATE_FAQ,
+            "product_page": Config.TEMPLATE_PRODUCT,
+            "comparison_page": Config.TEMPLATE_COMPARISON,
         }

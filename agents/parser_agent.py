@@ -1,29 +1,30 @@
 # agents/parser_agent.py
-
-import json
 from typing import Dict, Any
+from agents.base_agent import BaseAgent, AgentError
+import json
 
-
-class ParserAgent:
+class ParserAgent(BaseAgent):
     """
-    Reads and normalizes raw product data from JSON into
-    a clean internal product representation.
+    Very small parser that validates and normalizes input product JSON.
     """
 
-    def run(self, path: str) -> Dict[str, Any]:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+    def run(self, raw_input: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            if not isinstance(raw_input, dict):
+                raise AgentError("ParserAgent: raw_input must be a dict")
 
-        # Basic validation + defaults (can be extended)
-        product = {
-            "product_name": data.get("product_name", ""),
-            "concentration": data.get("concentration", ""),
-            "skin_type": data.get("skin_type", []),
-            "key_ingredients": data.get("key_ingredients", []),
-            "benefits": data.get("benefits", []),
-            "how_to_use": data.get("how_to_use", ""),
-            "side_effects": data.get("side_effects", ""),
-            "price": data.get("price", "")
-        }
+            # Copy and normalize keys used across pipeline
+            product = {
+                "product_name": raw_input.get("product_name") or raw_input.get("name"),
+                "concentration": raw_input.get("concentration", ""),
+                "skin_type": raw_input.get("skin_type", []),
+                "key_ingredients": raw_input.get("key_ingredients", raw_input.get("ingredients", [])),
+                "benefits": raw_input.get("benefits", []),
+                "how_to_use": raw_input.get("how_to_use", raw_input.get("usage", "")),
+                "side_effects": raw_input.get("side_effects", ""),
+                "price": raw_input.get("price") or raw_input.get("pricing", "")
+            }
+            return product
 
-        return product
+        except Exception as e:
+            raise AgentError(f"ParserAgent error: {e}")

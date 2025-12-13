@@ -1,0 +1,12 @@
+input:
+  product_data: "input/product_data.json"
+
+templates:
+  faq: "templates/faq_template.json"
+  product_page: "templates/product_page_template.json"
+  comparison: "templates/comparison_page_template.json"
+
+outputs:
+  faq: "outputs/faq.json"
+  product_page: "outputs/product_page.json"
+  comparison: "outputs/comparison_page.json"

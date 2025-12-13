@@ -1,160 +1,134 @@
+# agents/question_generation_agent.py
+
 import json
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+import re
+from typing import Dict, List, Any
+from agents.base_agent import BaseAgent, AgentError
+from infrastructure.json_llm_wrapper import JSONForcingLLM
+from infrastructure.config import Config
 
 
-class QuestionGenerationAgent:
+class QuestionGenerationAgent(BaseAgent):
     """
-    Hybrid LLM question generator:
-    - Try BART first (offline LLM)
-    - Extract usable questions
-    - If BART output is poor, fallback to handcrafted product-aware questions
-    - ALWAYS merge BART + fallback to ensure coverage of all categories
+    Professional FAQ generator.
+    Produces strictly valid JSON and ensures a minimum number of FAQs.
     """
 
-    def __init__(self):
-        print("Loading BART for Question Generation...")
-        self.tokenizer = AutoTokenizer.from_pretrained("facebook/bart-base")
-        self.model = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-base")
-        self.model.eval()
+    CATEGORIES = [
+        "Usage", "Safety", "Ingredients",
+        "Benefits", "Pricing", "Comparison", "General"
+    ]
 
-        self.categories = [
-            "Usage",
-            "Safety",
-            "Ingredients",
-            "Pricing",
-            "Benefits",
-            "Comparison",
+    def __init__(self, llm=None):
+        super().__init__(llm)
+        self.json_llm = JSONForcingLLM()
+        self.min_faqs = Config.MIN_QUESTIONS
+
+    # ----------------------------------------------------
+    # BUILD PROMPT
+    # ----------------------------------------------------
+    def _prompt(self, product: Dict[str, Any]) -> str:
+        return f"""
+You are an expert FAQ generator.
+
+Return ONLY a **pure JSON array**, no extra text.
+
+Each object must have this exact shape:
+{{
+  "category": "One of {self.CATEGORIES}",
+  "question": "A short, clear FAQ question"
+}}
+
+Write **20 FAQs** about this product.
+
+PRODUCT DETAILS:
+{json.dumps(product, indent=2, ensure_ascii=False)}
+
+Return ONLY a JSON array.
+"""
+
+    # ----------------------------------------------------
+    # FALLBACK GENERATOR
+    # ----------------------------------------------------
+    def _fallback_questions(self, product: Dict[str, Any], count: int) -> List[Dict[str, str]]:
+        name = product.get("product_name", "the product")
+        ingredients = product.get("key_ingredients", [])
+        ing_text = ", ".join(ingredients) if ingredients else "its active ingredients"
+
+        templates = [
+            ("Usage", f"How should I apply {name}?"),
+            ("Usage", f"Can I use {name} daily?"),
+            ("Safety", f"Is {name} safe for sensitive skin?"),
+            ("Safety", f"Does {name} have any side effects?"),
+            ("Ingredients", f"What are the key ingredients in {name}?"),
+            ("Ingredients", f"How does {ing_text} benefit the skin?"),
+            ("Benefits", f"What results can I expect from {name}?"),
+            ("Benefits", f"How long until I see visible improvements from using {name}?"),
+            ("Pricing", f"What is the price of {name}?"),
+            ("Pricing", f"Is {name} available in different sizes?"),
+            ("Comparison", f"How does {name} compare with similar skincare products?"),
+            ("General", f"Who can benefit most from using {name}?"),
         ]
 
-    def _generate_with_bart(self, prompt: str) -> str:
-        inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True)
+        out = []
+        idx = 0
+        while len(out) < count:
+            cat, q = templates[idx % len(templates)]
+            out.append({"category": cat, "question": q})
+            idx += 1
 
-        output_ids = self.model.generate(
-            **inputs,
-            max_new_tokens=150,
-            do_sample=True,
-            top_p=0.95,
-            top_k=50,
-            temperature=0.8,
-            no_repeat_ngram_size=2,
-        )
+        return out
 
-        return self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-
-    def _fallback_questions(self, product: dict):
-        """High-quality deterministic questions when BART fails."""
-        name = product.get("product_name", "this product")
-        ingredients = ", ".join(product.get("key_ingredients", []))
-        benefits = ", ".join(product.get("benefits", []))
-
-        base = [
-            # USAGE
-            ("Usage", f"How should I apply {name} for best results?"),
-            ("Usage", f"How often should {name} be used in my routine?"),
-
-            # SAFETY
-            ("Safety", f"Is {name} suitable for sensitive or acne-prone skin?"),
-            ("Safety", f"Can {name} cause any irritation or purging?"),
-
-            # INGREDIENTS
-            ("Ingredients", f"What are the key ingredients in {name} ({ingredients})?"),
-            ("Ingredients", f"Are there any irritating ingredients in {name}?"),
-
-            # PRICING
-            ("Pricing", f"Is {name} worth its price compared to other serums?"),
-            ("Pricing", f"Does {name} offer good value for money?"),
-
-            # BENEFITS
-            ("Benefits", f"What visible results can I expect from using {name} ({benefits})?"),
-            ("Benefits", f"How long does it take to see results with {name}?"),
-
-            # COMPARISON
-            ("Comparison", f"How does {name} compare to other Vitamin C serums?"),
-            ("Comparison", f"Why should I choose {name} over cheaper alternatives?"),
-        ]
-
-        return [{"category": c, "question": q} for c, q in base]
-
-    def _extract_questions_from_bart(self, text: str):
-        """Extract lines ending with '?' and reject junk."""
-        questions = []
-        for line in text.split("\n"):
-            line = line.strip()
-            if not line:
-                continue
-
-            # Remove numbering ("1. What…")
-            if "." in line[:4]:
-                try:
-                    idx = int(line.split(".")[0])
-                    line = line[line.find(".")+1:].strip()
-                except:
-                    pass
-
-            # Only accept actual questions
-            if line.endswith("?"):
-                questions.append(line)
-
-        return questions
-
-    def _categorize(self, q: str):
-        """Simple keyword-based categorization."""
-        lq = q.lower()
-        if any(w in lq for w in ["use", "apply", "routine", "how often"]):
-            return "Usage"
-        if any(w in lq for w in ["safe", "sensitive", "side effect", "irritation"]):
-            return "Safety"
-        if any(w in lq for w in ["ingredient", "contain", "formula", "vitamin"]):
-            return "Ingredients"
-        if any(w in lq for w in ["price", "cost", "expensive", "cheap", "value"]):
-            return "Pricing"
-        if any(w in lq for w in ["benefit", "result", "effect", "improvement"]):
-            return "Benefits"
-        if any(w in lq for w in ["compare", "better than", "alternative"]):
-            return "Comparison"
-
-        # fallback: assign by index bucket
-        return "General"
-
-    def run(self, product: dict):
-        """Final orchestration: BART → extract → fallback merge → category structuring."""
-
-        product_name = product.get("product_name")
-        ingredients = ", ".join(product.get("key_ingredients", []))
-        benefits = ", ".join(product.get("benefits", []))
-
-        prompt = (
-            f"Generate 12 different customer questions about this skincare product.\n"
-            f"Each question MUST end with a '?'. One per line.\n\n"
-            f"Product: {product_name}\n"
-            f"Ingredients: {ingredients}\n"
-            f"Benefits: {benefits}\n\n"
-            "Questions:\n"
-        )
-
-        # Step 1: try BART
+    # ----------------------------------------------------
+    # MAIN RUN LOGIC
+    # ----------------------------------------------------
+    def run(self, product: Dict[str, Any]) -> List[Dict[str, str]]:
         try:
-            bart_output = self._generate_with_bart(prompt)
-            bart_questions = self._extract_questions_from_bart(bart_output)
-        except Exception:
-            bart_questions = []
+            prompt = self._prompt(product)
 
-        # Step 2: fallback + merge
-        fallback = self._fallback_questions(product)
+            # Request LLM output using strict JSON forcing
+            fallback = self._fallback_questions(product, self.min_faqs)
+            llm_data = self.json_llm.generate_json(prompt, fallback)
 
-        final_questions = []
+            cleaned = []
+            seen = set()
 
-        # use BART questions first (few but still valid)
-        for q in bart_questions:
-            final_questions.append({
-                "category": self._categorize(q),
-                "question": q
-            })
+            for item in llm_data:
+                if not isinstance(item, dict):
+                    continue
 
-        # ensure minimum 12 by adding fallback
-        for item in fallback:
-            if len(final_questions) >= 12:
-                break
-            final_questions.append(item)
+                cat = str(item.get("category", "General")).strip().title()
+                if cat not in self.CATEGORIES:
+                    cat = "General"
 
-        return final_questions
+                q = str(item.get("question", "")).strip()
+                if not q:
+                    continue
+
+                key = (cat, q.lower())
+                if key in seen:
+                    continue
+
+                seen.add(key)
+                cleaned.append({"category": cat, "question": q})
+
+                if len(cleaned) >= self.min_faqs:
+                    break
+
+            # If still fewer than required → pad using fallback
+            if len(cleaned) < self.min_faqs:
+                needed = self.min_faqs - len(cleaned)
+                extra = self._fallback_questions(product, needed)
+                for f in extra:
+                    key = (f["category"], f["question"].lower())
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    cleaned.append(f)
+                    if len(cleaned) >= self.min_faqs:
+                        break
+
+            return cleaned[:self.min_faqs]
+
+        except Exception as e:
+            raise AgentError(f"QuestionGenerationAgent error: {e}")
