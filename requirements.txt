@@ -1,25 +1,20 @@
 # ----------------------------
-# Core LLM dependencies
+# Core LLM (Groq)
 # ----------------------------
-transformers==4.41.0
-accelerate==0.29.2
-sentencepiece==0.2.0
-huggingface_hub==0.23.0
+groq==0.13.0
 
 # ----------------------------
-# Torch (CPU-safe by default)
-# ----------------------------
-# This ensures the project runs on any machine.
-# GPU users can override manually if required.
-torch==2.2.0
-
-# ----------------------------
-# Agent Frameworks
+# LangChain Agent Framework
 # ----------------------------
 langchain==0.1.16
 langchain-core==0.1.45
 langchain-community==0.0.32
-crewai==0.22.0
+
+# ----------------------------
+# JSON / Structured AI
+# ----------------------------
+pydantic==2.7.1
+jsonschema==4.22.0
 
 # ----------------------------
 # Template Engine
@@ -27,18 +22,18 @@ crewai==0.22.0
 jinja2==3.1.3
 
 # ----------------------------
-# Utilities
+# Environment Variables
 # ----------------------------
 python-dotenv==1.0.1
+
+# ----------------------------
+# Utilities
+# ----------------------------
 pyyaml==6.0.1
 tqdm==4.66.2
+rich==13.7.1
 
 # ----------------------------
 # Testing
 # ----------------------------
 pytest==8.1.1
-
-# ----------------------------
-# Optional (Schema Validation)
-# ----------------------------
-jsonschema==4.22.0

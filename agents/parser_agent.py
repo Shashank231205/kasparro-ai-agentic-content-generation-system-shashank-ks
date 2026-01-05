@@ -28,3 +28,4 @@ class ParserAgent(BaseAgent):
 
         except Exception as e:
             raise AgentError(f"ParserAgent error: {e}")
+

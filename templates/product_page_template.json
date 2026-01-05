@@ -2,10 +2,10 @@
   "product_name": "{{ product_name }}",
   "benefits": {{ benefits | tojson }},
   "ingredients": {{ ingredients | tojson }},
-  "usage": "{{ usage }}",
+  "usage": {{ usage | tojson }},
   "safety": {
-    "side_effects": "{{ safety.side_effects }}",
+    "side_effects": {{ safety.side_effects | tojson }},
     "skin_type": {{ safety.skin_type | tojson }}
   },
-  "pricing": "{{ pricing }}"
+  "pricing": {{ pricing | tojson }}
 }

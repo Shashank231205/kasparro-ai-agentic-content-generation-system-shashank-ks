@@ -1,11 +1,23 @@
-# main.py
-from orchestrator.crew_orchestrator import HybridOrchestrator
+import os
+os.environ["LANGCHAIN_VERBOSE"] = "true"
+os.environ["LANGCHAIN_TRACING_V2"] = "false"
+os.environ["LANGCHAIN_API_KEY"] = ""
+from orchestrator.langchain_orchestrator import LangChainOrchestrator
+
 
 def main():
-    orch = HybridOrchestrator(debug=True)
-    final = orch.run()
+    print("🚀 Starting LangChain Agentic Pipeline")
 
-    print("\nFINAL OUTPUT KEYS:", final.keys())
+    orch = LangChainOrchestrator()
+    result = orch.run()
+
+    print("\n==============================")
+    print("✅ Pipeline completed")
+    print("==============================\n")
+
+    print("FINAL AGENT RESPONSE:\n")
+    print(result)
+
 
 if __name__ == "__main__":
     main()
